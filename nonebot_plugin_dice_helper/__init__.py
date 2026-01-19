@@ -4,7 +4,7 @@ from .config import DiceHelperConfig
 
 __plugin_meta__ = PluginMetadata(
     name="Dice Helper",
-    description="桌游辅助插件：投骰子、自定义骰子",
+    description="NoneBot 可自定义骰子的骰子插件",
     usage=(
         "roll / 投掷 <参数>\n"
         "add_dice <骰子名> <面1> <面2> ...\n"

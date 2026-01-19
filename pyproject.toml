@@ -1,7 +1,7 @@
 [project]
 name = "nonebot-plugin-dice-helper"
 version = "0.1.0"
-description = "NoneBot2桌游辅助插件：投骰子"
+description = "NoneBot 可自定义骰子的骰子插件"
 authors = [
     { name = "Demo" }
 ]
