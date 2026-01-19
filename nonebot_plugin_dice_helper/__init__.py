@@ -11,6 +11,10 @@ __plugin_meta__ = PluginMetadata(
         "del_dice <骰子名>\n"
         "dice_list"
     ),
+    type="application",
+    homepage="https://github.com/CaptainDemo/nonebot-plugin-dice-helper",
+    config=DiceHelperConfig,
+    supported_adapters={"~onebot.v11"},
 )
 
 driver = get_driver()
