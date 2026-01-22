@@ -1,5 +1,4 @@
 from nonebot.plugin import PluginMetadata
-from nonebot import get_driver
 from .config import DiceHelperConfig
 
 __plugin_meta__ = PluginMetadata(
@@ -13,13 +12,7 @@ __plugin_meta__ = PluginMetadata(
     ),
     type="application",
     homepage="https://github.com/CaptainDemo/nonebot-plugin-dice-helper",
-    config=DiceHelperConfig,
     supported_adapters={"~onebot.v11"},
 )
 
-driver = get_driver()
-plugin_config = DiceHelperConfig.model_validate(
-    driver.config.model_dump()
-)
-
-from . import roll  # noqa
+from . import roll

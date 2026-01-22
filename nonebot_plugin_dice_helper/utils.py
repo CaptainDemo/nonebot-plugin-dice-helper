@@ -10,15 +10,17 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.internal.permission import Permission
 from nonebot import logger
 
-try:
-    from MiniDemo.plugins.message_limiter import prefix_variance
-except ImportError as e:
-    prefix_variance = None
-    logger.warning(
-        "prefix_variance 未加载，dice_helper 将不使用前缀扰动功能",
-        exc_info=e,
-    )
-from . import plugin_config
+from .config import plugin_config
+prefix_variance = None
+if plugin_config.dice_helper_use_prefix_variance:
+    try:
+        from MiniDemo.plugins.message_limiter import prefix_variance
+    except ImportError as e:
+        prefix_variance = None
+        logger.warning(
+            "prefix_variance 未加载，dice_helper 将不使用前缀扰动功能",
+            exc_info=e,
+        )
     
 async def dice_admin_permission(bot: Bot, event: Event) -> bool:
     if isinstance(event, PrivateMessageEvent):
@@ -39,10 +41,7 @@ def maybe_apply_prefix_variance(text: str) -> str:
     """
     根据配置决定是否使用 prefix_variance
     """
-    if (
-        not plugin_config.dice_helper_use_prefix_variance
-        or prefix_variance is None
-    ):
+    if prefix_variance is None:
         return text
 
     try:
