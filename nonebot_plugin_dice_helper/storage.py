@@ -1,15 +1,19 @@
 import json
 from pathlib import Path
+from typing import Optional
+
 from nonebot import require
 
 require("nonebot_plugin_localstore")
 from nonebot_plugin_localstore import (
     get_plugin_data_dir,
-    get_plugin_config_dir,
+    get_plugin_config_file,
 )
 
-def get_default_data_file() -> Path:
-    return get_plugin_config_dir() / "default_data.json"
+plugin_config_file: Path = get_plugin_config_file("default_data.json")
+plugin_data_dir: Path = get_plugin_data_dir()
+default_data: Optional[dict] = None
+custom_data: dict[str, dict] = {}
 
 # =====================
 # session / path
@@ -22,7 +26,7 @@ def get_session_id(event) -> str:
 
 
 def _get_path(session_id: str) -> Path:
-    return get_plugin_data_dir() / f"{session_id}.json"
+    return plugin_data_dir / f"{session_id}.json"
 
 
 # =====================
@@ -30,15 +34,17 @@ def _get_path(session_id: str) -> Path:
 # =====================
 
 def load_data(session_id: str) -> dict:
-    path = _get_path(session_id)
-    if not path.exists():
-        return {"custom_dice": {}}
-
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return {"custom_dice": {}}
-
+    global custom_data
+    if session_id not in custom_data:
+        path = _get_path(session_id)
+        if not path.exists():
+            custom_data[session_id] = {"custom_dice": {}}
+        else:
+            try:
+                custom_data[session_id] = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                custom_data[session_id] = {"custom_dice": {}}
+    return custom_data[session_id]
 
 def save_data(session_id: str, data: dict) -> None:
     path = _get_path(session_id)
@@ -47,21 +53,21 @@ def save_data(session_id: str, data: dict) -> None:
         encoding="utf-8",
     )
 
-
 # =====================
 # 默认数据（全插件共用）
 # =====================
 
 def load_default_data() -> dict:
-    default_file = get_default_data_file()
-    if not default_file.exists():
-        return {}
-
-    try:
-        return json.loads(default_file.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-
+    global default_data
+    if default_data is None:
+        if not plugin_config_file.exists():
+            default_data = {}
+        else:
+            try:
+                default_data = json.loads(plugin_config_file.read_text(encoding="utf-8"))
+            except Exception:
+                default_data = {}
+    return default_data
 
 def get_default_section(section: str) -> dict:
     """
