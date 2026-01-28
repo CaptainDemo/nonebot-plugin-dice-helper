@@ -12,6 +12,7 @@ __plugin_meta__ = PluginMetadata(
     ),
     type="application",
     homepage="https://github.com/CaptainDemo/nonebot-plugin-dice-helper",
+    config=DiceHelperConfig,
     supported_adapters={"~onebot.v11"},
 )
 
