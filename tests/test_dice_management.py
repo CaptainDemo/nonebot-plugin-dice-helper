@@ -9,6 +9,7 @@
 """
 
 import sys
+from typing import Any
 from pathlib import Path
 
 # 添加项目根目录到路径
@@ -20,7 +21,7 @@ class DiceManager:
     """简化的骰子管理器，用于测试"""
 
     def __init__(self):
-        self.sessions: dict[str, dict] = {}
+        self.sessions: dict[str, dict[str, Any]] = {}
 
     def add_dice(self, session_id: str, name: str, faces: list[list[str]]) -> bool:
         """添加骰子"""
@@ -44,14 +45,14 @@ class DiceManager:
         del self.sessions[session_id]["custom_dice"][name]
         return True
 
-    def get_custom_dice(self, session_id: str) -> dict:
+    def get_custom_dice(self, session_id: str) -> dict[str, list[list[str]]]:
         """获取自定义骰子"""
         if session_id not in self.sessions:
             return {}
 
         return self.sessions[session_id].get("custom_dice", {})
 
-    def get_all_dice(self, session_id: str, default_dice: dict = None) -> dict:
+    def get_all_dice(self, session_id: str, default_dice: dict[str, list[list[str]]] = None) -> dict[str, list[list[str]]]:
         """获取所有骰子（默认+自定义）"""
         if default_dice is None:
             default_dice = {}

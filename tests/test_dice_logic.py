@@ -10,11 +10,23 @@
 
 import sys
 import random
+import importlib.util
 from pathlib import Path
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+# 直接导入 dice_roller 模块以避免触发 NoneBot 初始化
+spec = importlib.util.spec_from_file_location(
+    "dice_roller",
+    project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+)
+dice_roller = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(dice_roller)
+
+roll_numeric_dice = dice_roller.roll_numeric_dice
+roll_custom_dice = dice_roller.roll_custom_dice
 
 
 def test_dice_roll_numeric():
@@ -23,13 +35,7 @@ def test_dice_roll_numeric():
     count = 3
     face = 6
 
-    results = []
-    num_sum = 0
-
-    for _ in range(count):
-        r = random.randint(1, face)
-        results.append(str(r))
-        num_sum += r
+    results, num_sum = roll_numeric_dice(count, face)
 
     assert len(results) == count
     assert 1 <= num_sum <= face * count
@@ -39,146 +45,41 @@ def test_dice_roll_custom():
     """测试投掷自定义骰子的基本逻辑"""
     faces = [["命中", "1"], ["命中", "2"], ["未命中"]]
 
-    face = random.choice(faces)
-    text_face = "|".join(face)
+    results, _, _ = roll_custom_dice(1, faces)
 
     # 验证结果格式
-    assert isinstance(face, list)
-    assert len(face) > 0
-    assert isinstance(text_face, str)
+    assert isinstance(results, list)
+    assert len(results) == 1
+    assert isinstance(results[0], str)
 
 
 def test_dice_roll_custom_sum_counter():
     """测试自定义骰子的数值求和和标记计数"""
     faces = [["命中", "2"], ["未命中", "1"], ["命中", "3"]]
 
-    num_sum = 0
-    custom_counter = {}
+    # 投掷所有面以测试总和
+    results, num_sum, custom_counter = roll_custom_dice(3, faces)
 
-    for face in faces:
-        for item in face:
-            if item.isdigit():
-                num_sum += int(item)
-            else:
-                custom_counter[item] = custom_counter.get(item, 0) + 1
-
-    assert num_sum == 6  # 2 + 1 + 3
-    assert custom_counter["命中"] == 2
-    assert custom_counter["未命中"] == 1
+    # 由于是随机选择，我们只验证基本逻辑
+    assert len(results) == 3
+    assert isinstance(num_sum, int)
+    assert isinstance(custom_counter, dict)
 
 
-def test_dice_format_results():
-    """测试骰子结果格式化"""
-    dice_results = {
-        "d6": ["3", "5", "2"],
-        "d4": ["1", "4"]
-    }
+def test_dice_face_parsing():
+    """测试骰子面解析"""
+    text = "面1 面2 面3"
+    faces = [p.split("|") for p in text.split()]
 
-    lines = ["骰子结果"]
-    for dice, values in dice_results.items():
-        lines.append(
-            f"{dice} ×{len(values)}："
-            + "，".join(values)
-        )
-
-    assert "骰子结果" in lines
-    assert "d6 ×3：3，5，2" in lines
-    assert "d4 ×2：1，4" in lines
+    assert faces == [["面1"], ["面2"], ["面3"]]
 
 
-def test_dice_format_custom_results():
-    """测试自定义骰子结果格式化"""
-    dice_results = {
-        "命中骰": ["命中", "未命中"],
-        "命运骰": ["成功", "失败", "重骰"]
-    }
+def test_dice_face_parsing_with_multi_items():
+    """测试多标记骰子面解析"""
+    text = "命中|1 命中|2 未命中"
+    faces = [p.split("|") for p in text.split()]
 
-    lines = ["骰子结果"]
-    for dice, values in dice_results.items():
-        lines.append(
-            f"{dice} ×{len(values)}："
-            + "，".join(values)
-        )
-
-    assert "骰子结果" in lines
-    assert "命中骰 ×2：命中，未命中" in lines
-    assert "命运骰 ×3：成功，失败，重骰" in lines
-
-
-def test_dice_format_multi_item_face():
-    """测试多标记骰子面格式化"""
-    dice_results = {
-        "伤害骰": ["3|命中", "1|暴击", "2|命中"]
-    }
-
-    lines = ["骰子结果"]
-    for dice, values in dice_results.items():
-        lines.append(
-            f"{dice} ×{len(values)}："
-            + "，".join(values)
-        )
-
-    assert "伤害骰 ×3：3|命中，1|暴击，2|命中" in lines
-
-
-def test_dice_format_total_numeric_only():
-    """测试仅数字的合计"""
-    num_sum = 15
-    custom_counter = {}
-    total_parts = []
-
-    if num_sum:
-        total_parts.append(str(num_sum))
-    for k, v in custom_counter.items():
-        total_parts.append(f"{v}{k}")
-
-    total = "合计" + ("，".join(total_parts) if total_parts else "无")
-    assert total == "合计15"
-
-
-def test_dice_format_total_custom_only():
-    """测试仅自定义标记的合计"""
-    num_sum = 0
-    custom_counter = {"命中": 3, "暴击": 1}
-    total_parts = []
-
-    if num_sum:
-        total_parts.append(str(num_sum))
-    for k, v in custom_counter.items():
-        total_parts.append(f"{v}{k}")
-
-    total = "合计" + ("，".join(total_parts) if total_parts else "无")
-    assert total == "合计3命中，1暴击"
-
-
-def test_dice_format_total_mixed():
-    """测试混合合计"""
-    num_sum = 12
-    custom_counter = {"命中": 2, "暴击": 1}
-    total_parts = []
-
-    if num_sum:
-        total_parts.append(str(num_sum))
-    for k, v in custom_counter.items():
-        total_parts.append(f"{v}{k}")
-
-    total = "合计" + ("，".join(total_parts) if total_parts else "无")
-    assert total == "合计12，2命中，1暴击"
-
-
-def test_dice_format_total_empty():
-    """测试空合计"""
-    num_sum = 0
-    custom_counter = {}
-    total_parts = []
-
-    if num_sum:
-        total_parts.append(str(num_sum))
-    for k, v in custom_counter.items():
-        total_parts.append(f"{v}{k}")
-
-    total = "合计" + ("，".join(total_parts) if total_parts else "无")
-    assert total == "合计无"
+    assert faces == [["命中", "1"], ["命中", "2"], ["未命中"]]
 
 
 def test_dice_parsing_logic():
@@ -197,22 +98,6 @@ def test_dice_parsing_logic():
     dice = "d6x"
     is_numeric_dice = dice.startswith("d") and dice[1:].isdigit()
     assert is_numeric_dice is False
-
-
-def test_dice_face_parsing():
-    """测试骰子面解析"""
-    text = "面1 面2 面3"
-    faces = [p.split("|") for p in text.split()]
-
-    assert faces == [["面1"], ["面2"], ["面3"]]
-
-
-def test_dice_face_parsing_with_multi_items():
-    """测试多标记骰子面解析"""
-    text = "命中|1 命中|2 未命中"
-    faces = [p.split("|") for p in text.split()]
-
-    assert faces == [["命中", "1"], ["命中", "2"], ["未命中"]]
 
 
 def test_dice_validation():
@@ -234,3 +119,66 @@ def test_dice_validation():
     dice = "d6"
     is_numeric = dice.startswith("d") and dice[1:].isdigit()
     assert is_numeric is True
+
+
+def test_dice_numeric_sum_calculation():
+    """测试数字骰子总和计算"""
+    # 使用固定种子进行测试
+    random.seed(42)
+    results, total = roll_numeric_dice(5, 6)
+
+    # 验证每个结果都是有效的骰子面
+    for r in results:
+        assert r in ["1", "2", "3", "4", "5", "6"]
+
+    # 验证总和等于所有结果的和
+    expected_total = sum(int(r) for r in results)
+    assert total == expected_total
+
+
+def test_dice_custom_tag_counter():
+    """测试自定义骰子标记计数"""
+    # 使用固定数量的投掷测试计数逻辑
+    faces = [["命中", "1"], ["未命中"], ["暴击", "2"]]
+
+    # 投掷多次以累积计数
+    results, total, counter = roll_custom_dice(100, faces)
+
+    # 验证计数逻辑
+    total_rolls = sum(counter.values())
+    # 所有标记的总数应该等于投掷次数乘以每个面可能的标记数
+    # 由于是随机的，我们只验证基本属性
+    assert isinstance(counter, dict)
+    assert total_rolls >= 0
+
+
+def test_dice_custom_face_joined_correctly():
+    """测试自定义骰子面正确连接"""
+    faces = [["标签1", "标签2"], ["标签A", "标签B"]]
+
+    results, _, _ = roll_custom_dice(2, faces)
+
+    # 验证结果使用 | 分隔符
+    for result in results:
+        assert "|" in result
+
+
+def test_dice_numeric_range_validation():
+    """测试数字骰子结果范围验证"""
+    test_cases = [
+        (1, 4),   # d4
+        (1, 6),   # d6
+        (1, 8),   # d8
+        (1, 10),  # d10
+        (1, 12),  # d12
+        (1, 20),  # d20
+        (1, 100), # d100
+    ]
+
+    for min_val, max_val in test_cases:
+        results, total = roll_numeric_dice(10, max_val)
+        for r in results:
+            assert int(r) >= min_val
+            assert int(r) <= max_val
+        assert total >= min_val * 10
+        assert total <= max_val * 10

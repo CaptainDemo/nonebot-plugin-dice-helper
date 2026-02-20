@@ -1,5 +1,3 @@
-import re
-from typing import List, Tuple
 from nonebot.permission import SUPERUSER
 from nonebot.adapters import Event
 from nonebot.adapters.onebot.v11 import (
@@ -23,6 +21,16 @@ if plugin_config.dice_helper_use_prefix_variance:
         )
     
 async def dice_admin_permission(bot: Bot, event: Event) -> bool:
+    """
+    判断用户是否有骰子管理权限
+
+    Args:
+        bot: 机器人实例
+        event: 事件对象
+
+    Returns:
+        bool: 有权限返回 True，否则返回 False
+    """
     if isinstance(event, PrivateMessageEvent):
         return True
 
@@ -40,6 +48,12 @@ DICE_ADMIN = Permission(dice_admin_permission)
 def maybe_apply_prefix_variance(text: str) -> str:
     """
     根据配置决定是否使用 prefix_variance
+
+    Args:
+        text: 原始文本
+
+    Returns:
+        str: 处理后的文本，如果 prefix_variance 不可用则返回原文本
     """
     if prefix_variance is None:
         return text
@@ -47,33 +61,4 @@ def maybe_apply_prefix_variance(text: str) -> str:
     try:
         return prefix_variance.apply(text)
     except Exception:
-        return text    
-
-def parse_roll_args(parts: list[str]) -> List[Tuple[int, str]]:
-    """
-    将参数解析为 [(数量, 骰子名), ...]
-    支持：
-      2d6
-      d6
-      3命中骰
-      命中骰
-    """
-    result: List[Tuple[int, str]] = []
-
-    for part in parts:
-        part = part.strip()
-        if not part:
-            continue
-
-        # 尝试匹配“数字 + 骰子名”
-        m = re.fullmatch(r"(\d+)(.+)", part)
-        if m:
-            count = int(m.group(1))
-            dice = m.group(2)
-            result.append((count, dice))
-            continue
-
-        # 没有数字，默认 1
-        result.append((1, part))
-
-    return result
+        return text
