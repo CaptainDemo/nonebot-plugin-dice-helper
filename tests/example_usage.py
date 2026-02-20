@@ -7,13 +7,9 @@
 """
 
 import sys
-import random
 from pathlib import Path
-
-# 修复 Windows 控制台编码问题
-if sys.platform == "win32":
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+import importlib.util
+import random
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
@@ -25,13 +21,21 @@ def example_basic_dice_roll():
     print("示例 1: 基本的骰子投掷")
     print("-" * 40)
 
-    # 投掷一个 d6 骰子
-    dice = "d6"
-    face = int(dice[1:])
-    result = random.randint(1, face)
+    # 直接导入 dice_roller 模块以避免触发 NoneBot 初始化
+    spec = importlib.util.spec_from_file_location(
+        "dice_roller",
+        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+    )
+    dice_roller = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dice_roller)
 
-    print(f"投掷 {dice}: 结果 = {result}")
-    assert 1 <= result <= 6, "骰子结果应该在 1 到 6 之间"
+    roll_numeric_dice = dice_roller.roll_numeric_dice
+
+    # 投掷一个 d6 骰子
+    results, total = roll_numeric_dice(1, 6)
+
+    print(f"投掷 d6: 结果 = {results[0]}, 总和 = {total}")
+    assert 1 <= total <= 6, "骰子结果应该在 1 到 6 之间"
     print("[OK] 测试通过\n")
 
 
@@ -40,24 +44,15 @@ def example_parse_dice_args():
     print("示例 2: 解析骰子参数")
     print("-" * 40)
 
-    import re
-    from typing import List, Tuple
+    # 直接导入 dice_roller 模块
+    spec = importlib.util.spec_from_file_location(
+        "dice_roller",
+        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+    )
+    dice_roller = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dice_roller)
 
-    def parse_roll_args(parts: list[str]) -> List[Tuple[int, str]]:
-        """将参数解析为 [(数量, 骰子名), ...]"""
-        result: List[Tuple[int, str]] = []
-        for part in parts:
-            part = part.strip()
-            if not part:
-                continue
-            m = re.fullmatch(r"(\d+)(.+)", part)
-            if m:
-                count = int(m.group(1))
-                dice = m.group(2)
-                result.append((count, dice))
-                continue
-            result.append((1, part))
-        return result
+    parse_roll_args = dice_roller.parse_roll_args
 
     # 测试示例
     test_cases = [
@@ -78,32 +73,25 @@ def example_custom_dice():
     print("示例 3: 自定义骰子管理")
     print("-" * 40)
 
-    class SimpleDiceManager:
-        def __init__(self):
-            self.dice = {}
+    # 直接导入 dice_roller 模块
+    spec = importlib.util.spec_from_file_location(
+        "dice_roller",
+        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+    )
+    dice_roller = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dice_roller)
 
-        def add_dice(self, name: str, faces: list[list[str]]) -> bool:
-            if name in self.dice:
-                return False
-            self.dice[name] = faces
-            return True
+    roll_custom_dice = dice_roller.roll_custom_dice
 
-        def roll_dice(self, name: str) -> str:
-            if name not in self.dice:
-                raise ValueError(f"骰子 '{name}' 不存在")
-            face = random.choice(self.dice[name])
-            return "|".join(face)
+    # 定义自定义骰子面
+    faces = [["命中"], ["未命中"]]
 
-    manager = SimpleDiceManager()
+    # 投掷自定义骰子
+    results, total, counter = roll_custom_dice(5, faces)
 
-    # 添加自定义骰子
-    success = manager.add_dice("命中骰", [["命中"], ["未命中"]])
-    print(f"添加 '命中骰': {'成功' if success else '失败'}")
-
-    # 投掷骰子
-    result = manager.roll_dice("命中骰")
-    print(f"投掷 '命中骰': {result}")
-    print("✓ 操作成功\n")
+    print(f"投掷 5 次 '命中骰': {results}")
+    print(f"标记统计: {counter}")
+    print("[OK] 操作成功\n")
 
 
 def example_format_results():
@@ -111,40 +99,26 @@ def example_format_results():
     print("示例 4: 格式化骰子结果")
     print("-" * 40)
 
+    # 直接导入 dice_roller 模块
+    spec = importlib.util.spec_from_file_location(
+        "dice_roller",
+        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+    )
+    dice_roller = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dice_roller)
+
+    format_dice_results = dice_roller.format_dice_results
+
     # 模拟骰子结果
     dice_results = {
         "d6": ["3", "5", "2"],
         "命中骰": ["命中", "未命中"]
     }
 
-    num_sum = 0
-    custom_counter = {}
+    num_sum = 10
+    custom_counter = {"命中": 1, "未命中": 1}
 
-    for dice, values in dice_results.items():
-        if dice.startswith("d"):
-            # 数字骰子
-            for v in values:
-                num_sum += int(v)
-        else:
-            # 自定义骰子
-            for v in values:
-                if not v.isdigit():
-                    custom_counter[v] = custom_counter.get(v, 0) + 1
-
-    # 构建结果文本
-    lines = ["骰子结果"]
-    for dice, values in dice_results.items():
-        lines.append(f"{dice} ×{len(values)}：" + "，".join(values))
-
-    total_parts = []
-    if num_sum:
-        total_parts.append(str(num_sum))
-    for k, v in custom_counter.items():
-        total_parts.append(f"{v}{k}")
-
-    lines.append("合计" + ("，".join(total_parts) if total_parts else "无"))
-
-    result = "\n".join(lines)
+    result = format_dice_results(dice_results, num_sum, custom_counter)
     print(result)
     print("[OK] 格式化完成\n")
 
@@ -171,6 +145,8 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"[FAIL] 发生错误: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
