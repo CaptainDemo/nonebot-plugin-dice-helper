@@ -107,3 +107,39 @@ d6 ×2：2，1<br>
 | del_dice  | 群管理/超级用户  | 否 | 群聊/私聊 |                                      删除自定义骰子                                       |
 ### 效果图
 有时间上传
+
+## 🧪 测试
+
+本项目包含完整的本地测试套件，可以验证骰子插件的核心功能。
+
+### 安装测试依赖
+
+```bash
+pip install pytest pytest-mock pytest-cov pytest-asyncio
+```
+
+### 运行测试
+
+```bash
+# 使用测试脚本运行所有测试
+python run_tests.py
+
+# 或者直接使用 pytest
+pytest tests/
+
+# 运行特定模块的测试
+python run_tests.py test_utils
+python run_tests.py test_dice_logic
+python run_tests.py test_dice_management
+
+# 查看测试示例
+python tests/example_usage.py
+```
+
+### 测试覆盖
+
+- **test_utils.py**: 测试参数解析和前缀扰动功能
+- **test_dice_logic.py**: 测试骰子投掷逻辑和结果格式化
+- **test_dice_management.py**: 测试骰子管理和会话隔离
+
+详细的测试说明请查看 [README_TEST.md](./README_TEST.md)
