@@ -13,6 +13,7 @@ import random
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root / "src"))
 sys.path.insert(0, str(project_root))
 
 
@@ -24,7 +25,7 @@ def example_basic_dice_roll():
     # 直接导入 dice_roller 模块以避免触发 NoneBot 初始化
     spec = importlib.util.spec_from_file_location(
         "dice_roller",
-        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+        project_root / "src" / "nonebot_plugin_dice_helper" / "dice_roller.py"
     )
     dice_roller = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(dice_roller)
@@ -47,7 +48,7 @@ def example_parse_dice_args():
     # 直接导入 dice_roller 模块
     spec = importlib.util.spec_from_file_location(
         "dice_roller",
-        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+        project_root / "src" / "nonebot_plugin_dice_helper" / "dice_roller.py"
     )
     dice_roller = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(dice_roller)
@@ -76,7 +77,7 @@ def example_custom_dice():
     # 直接导入 dice_roller 模块
     spec = importlib.util.spec_from_file_location(
         "dice_roller",
-        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+        project_root / "src" / "nonebot_plugin_dice_helper" / "dice_roller.py"
     )
     dice_roller = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(dice_roller)
@@ -102,7 +103,7 @@ def example_format_results():
     # 直接导入 dice_roller 模块
     spec = importlib.util.spec_from_file_location(
         "dice_roller",
-        project_root / "nonebot_plugin_dice_helper" / "dice_roller.py"
+        project_root / "src" / "nonebot_plugin_dice_helper" / "dice_roller.py"
     )
     dice_roller = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(dice_roller)

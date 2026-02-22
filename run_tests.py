@@ -19,6 +19,7 @@ def main():
     """主函数"""
     # 切换到项目根目录
     project_root = Path(__file__).parent
+    sys.path.insert(0, str(project_root / "src"))
     sys.path.insert(0, str(project_root))
 
     # 默认参数

@@ -34,6 +34,9 @@ plugins = ["nonebot_plugin_dice_helper"]
 requires = ["setuptools>=58.1"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 # =====================
 # pytest 配置
 # =====================
@@ -59,7 +62,7 @@ markers = [
 # =====================
 
 [tool.coverage.run]
-source = ["nonebot_plugin_dice_helper"]
+source = ["src"]
 omit = [
     "*/tests/*",
     "*/__init__.py",

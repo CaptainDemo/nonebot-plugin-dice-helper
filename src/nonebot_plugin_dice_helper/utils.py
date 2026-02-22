@@ -12,7 +12,7 @@ from .config import plugin_config
 prefix_variance = None
 if plugin_config.dice_helper_use_prefix_variance:
     try:
-        from MiniDemo.plugins.message_limiter import prefix_variance
+        from nonebot_plugin_message_limiter import prefix_variance
     except ImportError as e:
         prefix_variance = None
         logger.warning(
