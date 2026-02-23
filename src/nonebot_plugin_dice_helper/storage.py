@@ -54,22 +54,40 @@ def load_data(session_id: str) -> dict[str, Any]:
         session_id: 会话ID
 
     Returns:
-        dict: 会话数据，包含 custom_dice 字段
+        dict: 会话数据，包含 custom_dice, card_decks, card_deck_instances 字段
     """
     global custom_data
     if session_id not in custom_data:
         path = _get_path(session_id)
         if not path.exists():
-            custom_data[session_id] = {"custom_dice": {}}
+            custom_data[session_id] = {
+                "custom_dice": {},
+                "card_decks": {},
+                "card_deck_instances": {},
+            }
         else:
             try:
-                custom_data[session_id] = json.loads(path.read_text(encoding="utf-8"))
+                data = json.loads(path.read_text(encoding="utf-8"))
+                # 兼容旧数据结构
+                if "card_decks" not in data:
+                    data["card_decks"] = {}
+                if "card_deck_instances" not in data:
+                    data["card_deck_instances"] = {}
+                custom_data[session_id] = data
             except json.JSONDecodeError as e:
                 logger.warning(f"JSON解析失败 for session {session_id}: {e}")
-                custom_data[session_id] = {"custom_dice": {}}
+                custom_data[session_id] = {
+                    "custom_dice": {},
+                    "card_decks": {},
+                    "card_deck_instances": {},
+                }
             except IOError as e:
                 logger.error(f"读取文件失败 {path}: {e}")
-                custom_data[session_id] = {"custom_dice": {}}
+                custom_data[session_id] = {
+                    "custom_dice": {},
+                    "card_decks": {},
+                    "card_deck_instances": {},
+                }
     return custom_data[session_id]
 
 def save_data(session_id: str, data: dict[str, Any]) -> None:
@@ -113,3 +131,13 @@ def get_default_section(section: str) -> dict[str, Any]:
     data = load_default_data()
     value = data.get(section)
     return value if isinstance(value, dict) else {}
+
+
+def get_card_decks_section() -> dict[str, Any]:
+    """
+    获取默认卡组定义
+
+    Returns:
+        dict: 默认卡组字典，格式为 {卡组名: [卡1, 卡2, ...]}
+    """
+    return get_default_section("card_decks")
