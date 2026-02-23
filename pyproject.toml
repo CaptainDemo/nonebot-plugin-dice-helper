@@ -3,7 +3,7 @@ name = "nonebot-plugin-dice-helper"
 version = "0.1.2"
 description = "NoneBot 可自定义骰子的骰子插件"
 authors = [
-    { name = "Demo" }
+    { name = "Demo", email = "w2y3q2@163.com" }
 ]
 license = { text = "MIT" }
 readme = "README.md"
@@ -28,3 +28,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+namespaces = false
