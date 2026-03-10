@@ -101,6 +101,42 @@ def save_data(session_id: str, data: dict[str, Any]) -> None:
 # 默认数据（全插件共用）
 # =====================
 
+def _get_default_data() -> dict[str, Any]:
+    """
+    生成默认数据，包含硬币和扑克牌
+
+    Returns:
+        dict: 默认数据
+    """
+    # 生成扑克牌数据，每张卡是标记列表
+    suits = ["♠", "♥", "♣", "♦"]
+    ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+    poker_cards = [[f"{suit}{rank}"] for suit in suits for rank in ranks]
+    poker_cards.extend([["小王"], ["大王"]])  # 添加大小王
+
+    return {
+        "dice": {
+            "硬币": [["正面"], ["反面"]],
+        },
+        "card_decks": {
+            "扑克牌": poker_cards,
+        },
+    }
+
+
+def save_default_data(data: dict[str, Any]) -> None:
+    """
+    保存默认数据到配置文件
+
+    Args:
+        data: 默认数据字典
+    """
+    plugin_config_file.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def load_default_data() -> dict[str, Any]:
     """
     加载默认数据
@@ -111,16 +147,19 @@ def load_default_data() -> dict[str, Any]:
     global default_data
     if default_data is None:
         if not plugin_config_file.exists():
-            default_data = {}
+            default_data = _get_default_data()
+            save_default_data(default_data)
         else:
             try:
                 default_data = json.loads(plugin_config_file.read_text(encoding="utf-8"))
             except json.JSONDecodeError as e:
                 logger.error(f"默认数据JSON解析失败: {e}")
-                default_data = {}
+                default_data = _get_default_data()
+                save_default_data(default_data)
             except IOError as e:
                 logger.error(f"读取默认数据文件失败: {e}")
-                default_data = {}
+                default_data = _get_default_data()
+                save_default_data(default_data)
     return default_data
 
 def get_default_section(section: str) -> dict[str, Any]:
